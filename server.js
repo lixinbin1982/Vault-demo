@@ -32,6 +32,26 @@ const CUSTOMER_ID = process.env.DEMO_CUSTOMER_ID || 'DEMO-CUSTOMER-001';
 app.use(express.json());
 app.use(express.static('public'));
 
+// ─── In-memory vault token store ─────────────────────────────────────────────
+// Keyed by customerId → array of token records
+const vaultStore = {};
+
+function saveToken(customerId, record) {
+  if (!vaultStore[customerId]) vaultStore[customerId] = [];
+  // Avoid duplicates
+  if (!vaultStore[customerId].find(t => t.id === record.id)) {
+    vaultStore[customerId].push(record);
+  }
+}
+function listTokens(customerId) {
+  return vaultStore[customerId] || [];
+}
+function deleteToken(customerId, tokenId) {
+  if (vaultStore[customerId]) {
+    vaultStore[customerId] = vaultStore[customerId].filter(t => t.id !== tokenId);
+  }
+}
+
 // ─── Access Token Cache ──────────────────────────────────────────────────────
 let _token = null, _tokenExp = 0;
 
@@ -77,6 +97,27 @@ async function pp(method, path, body = null, idempotencyKey = null) {
   console.log(`← ${r.status}`, JSON.stringify(data).slice(0, 500));
   return { status: r.status, ok: r.ok, data };
 }
+
+// ─── GET /api/debug/token ────────────────────────────────────────────────────
+// Returns the raw token response including all granted scopes
+app.get('/api/debug/token', async (req, res) => {
+  try {
+    const r = await fetch(`${BASE}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(
+          `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
+        ).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials',
+    });
+    const d = await r.json();
+    res.json({ scopes: d.scope?.split(' ') || [], expires_in: d.expires_in, token_type: d.token_type });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ─── Credentials guard ───────────────────────────────────────────────────────
 app.use('/api', (req, res, next) => {
@@ -151,7 +192,7 @@ app.post('/api/order/create', async (req, res) => {
         custom_id:     customerId,
         soft_descriptor: 'VAULTAPP',
         amount: {
-          currency_code: 'USD',
+          currency_code: 'AUD',
           value:         cfg.value,
         },
       }],
@@ -190,12 +231,49 @@ app.post('/api/order/capture', async (req, res) => {
   try {
     const { orderId } = req.body;
     // Idempotency key = orderId so double-submit is safe
+    const customerId = req.body.customerId || CUSTOMER_ID;
     const { status, data } = await pp(
       'POST',
       `/v2/checkout/orders/${orderId}/capture`,
       {},
       `CAPTURE-${orderId}`
     );
+
+    // Auto-save vault token to local store
+    if (data?.payment_source?.paypal?.attributes?.vault?.id) {
+      const v = data.payment_source.paypal.attributes.vault;
+      const src = data.payment_source.paypal;
+      saveToken(customerId, {
+        id:     v.id,
+        status: v.status,
+        type:   'paypal',
+        payment_source: {
+          paypal: {
+            email_address: src.email_address || src.account_id || '',
+            account_id:    src.account_id || '',
+          },
+        },
+        created: new Date().toISOString(),
+      });
+    }
+    if (data?.payment_source?.card?.attributes?.vault?.id) {
+      const v   = data.payment_source.card.attributes.vault;
+      const src = data.payment_source.card;
+      saveToken(customerId, {
+        id:     v.id,
+        status: v.status,
+        type:   'card',
+        payment_source: {
+          card: {
+            brand:       src.brand || '',
+            last_digits: src.last_digits || '',
+            expiry:      src.expiry || '',
+          },
+        },
+        created: new Date().toISOString(),
+      });
+    }
+
     res.status(status).json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -224,12 +302,28 @@ app.post('/api/vault/setup-token', async (req, res) => {
 // Converts a completed setup token into a permanent payment token.
 app.post('/api/vault/payment-token', async (req, res) => {
   try {
-    const { setupTokenId } = req.body;
+    const { setupTokenId, customerId = CUSTOMER_ID } = req.body;
     const { status, data } = await pp('POST', '/v3/vault/payment-tokens', {
       payment_source: {
         token: { id: setupTokenId, type: 'SETUP_TOKEN' },
       },
     });
+    // Save to local store
+    if (data?.id) {
+      const src = data.payment_source?.card || {};
+      saveToken(customerId, {
+        id:   data.id,
+        type: 'card',
+        payment_source: {
+          card: {
+            brand:       src.brand || '',
+            last_digits: src.last_digits || '',
+            expiry:      src.expiry || '',
+          },
+        },
+        created: new Date().toISOString(),
+      });
+    }
     res.status(status).json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -237,30 +331,18 @@ app.post('/api/vault/payment-token', async (req, res) => {
 });
 
 // ─── GET /api/vault/tokens ────────────────────────────────────────────────────
-// Lists all vault tokens saved for a customer.
-app.get('/api/vault/tokens', async (req, res) => {
-  try {
-    const customerId = req.query.customerId || CUSTOMER_ID;
-    const { status, data } = await pp('GET',
-      `/v3/vault/payment-tokens?customer_id=${encodeURIComponent(customerId)}`
-    );
-    res.status(status).json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+// Returns tokens from local in-memory store (no PayPal API call needed)
+app.get('/api/vault/tokens', (req, res) => {
+  const customerId = req.query.customerId || CUSTOMER_ID;
+  res.json({ payment_tokens: listTokens(customerId) });
 });
 
 // ─── DELETE /api/vault/tokens/:id ────────────────────────────────────────────
-app.delete('/api/vault/tokens/:id', async (req, res) => {
-  try {
-    const { status } = await pp('DELETE',
-      `/v3/vault/payment-tokens/${req.params.id}`
-    );
-    // PayPal returns 204 No Content on success
-    res.status(200).json({ deleted: status === 204, id: req.params.id });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+// Removes from local store (PayPal v3 delete skipped — needs vault scope)
+app.delete('/api/vault/tokens/:id', (req, res) => {
+  const customerId = req.query.customerId || CUSTOMER_ID;
+  deleteToken(customerId, req.params.id);
+  res.json({ deleted: true, id: req.params.id });
 });
 
 // ─── POST /api/vault/charge ───────────────────────────────────────────────────
@@ -281,7 +363,7 @@ app.post('/api/vault/charge', async (req, res) => {
     const orderRes = await pp('POST', '/v2/checkout/orders', {
       intent: 'CAPTURE',
       purchase_units: [{
-        amount:      { currency_code: 'USD', value: amount },
+        amount:      { currency_code: 'AUD', value: amount },
         description,
       }],
       payment_source: {
@@ -333,7 +415,7 @@ app.post('/api/vault/card-charge', async (req, res) => {
     const orderRes = await pp('POST', '/v2/checkout/orders', {
       intent: 'CAPTURE',
       purchase_units: [{
-        amount:      { currency_code: 'USD', value: amount },
+        amount:      { currency_code: 'AUD', value: amount },
         description,
       }],
       payment_source: {

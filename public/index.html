@@ -242,53 +242,53 @@ body {
 <div class="screen active" id="screen-app">
   <div class="app-header">
     <div class="app-top">
-      <div class="app-icon">⚡</div>
-      <div class="app-name">VaultApp</div>
+      <div class="app-icon">🚗</div>
+      <div class="app-name">DriveX</div>
     </div>
-    <div class="app-tagline">PayPal Vault-Only Sandbox Demo</div>
+    <div class="app-tagline">In-Car Services · PayPal Vault Sandbox Demo</div>
     <div class="balance-row">
-      <div><div class="bal-label">Credits</div><div class="bal-amount">240 CR</div></div>
-      <div class="bal-tag">✦ Pro</div>
+      <div><div class="bal-label">My Vehicle</div><div class="bal-amount" style="font-size:18px;margin-top:2px">SUV Pro · 2024</div></div>
+      <div class="bal-tag">✦ Connected</div>
     </div>
   </div>
 
-  <div class="section-label">Choose Scenario</div>
+  <div class="section-label">In-Car Services</div>
 
-  <div class="sc-card" onclick="openScenario('subscription')">
-    <div class="sc-icon" style="background:#eef2ff">🔄</div>
+  <div class="sc-card" onclick="openProduct('music')">
+    <div class="sc-icon" style="background:#eef2ff">🎵</div>
     <div class="sc-info">
-      <div class="sc-name">Subscription</div>
-      <div class="sc-desc">First charge → vault token → backend auto-renews monthly off-session</div>
+      <div class="sc-name">Music Unlimited</div>
+      <div class="sc-desc">Hi-Fi streaming · 50M tracks · Offline cache</div>
     </div>
     <div>
-      <div class="sc-price">$9.99</div>
-      <div class="sc-sub">/month</div>
+      <div class="sc-price">A$9.99</div>
+      <div class="sc-sub">from/mo</div>
       <span class="sc-arrow">›</span>
     </div>
   </div>
 
-  <div class="sc-card" onclick="openScenario('topup')">
-    <div class="sc-icon" style="background:#f0fdf4">💳</div>
+  <div class="sc-card" onclick="openProduct('video')">
+    <div class="sc-icon" style="background:#fff0f5">🎬</div>
     <div class="sc-info">
-      <div class="sc-name">Credit Top-Up</div>
-      <div class="sc-desc">One-time + vault for quick repeat purchases</div>
+      <div class="sc-name">Video Premium</div>
+      <div class="sc-desc">4K in-car video · Entertainment · Multi-screen</div>
     </div>
     <div>
-      <div class="sc-price">$19.99</div>
-      <div class="sc-sub">one-time</div>
+      <div class="sc-price">A$14.99</div>
+      <div class="sc-sub">from/mo</div>
       <span class="sc-arrow">›</span>
     </div>
   </div>
 
-  <div class="sc-card" onclick="openScenario('lifetime')">
-    <div class="sc-icon" style="background:#fff8f0">👑</div>
+  <div class="sc-card" onclick="openProduct('cloud')">
+    <div class="sc-icon" style="background:#f0fdf4">☁️</div>
     <div class="sc-info">
-      <div class="sc-name">Lifetime Access</div>
-      <div class="sc-desc">Single charge + optional vault for future</div>
+      <div class="sc-name">Cloud Storage</div>
+      <div class="sc-desc">Dashcam backup · Cross-device sync · 100 GB</div>
     </div>
     <div>
-      <div class="sc-price">$299</div>
-      <div class="sc-sub">once</div>
+      <div class="sc-price">A$4.99</div>
+      <div class="sc-sub">from/mo</div>
       <span class="sc-arrow">›</span>
     </div>
   </div>
@@ -304,10 +304,83 @@ body {
 </div>
 
 <!-- ══════════════════════════════
+     PLAN SELECTION SCREEN
+══════════════════════════════ -->
+<div class="screen" id="screen-plan">
+  <div class="co-back" onclick="showScreen('app')">‹ Back</div>
+  <div id="plan-product-header" style="padding:12px 20px 4px;display:flex;align-items:center;gap:12px">
+    <div id="plan-icon" style="width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px"></div>
+    <div>
+      <div id="plan-name" style="font-size:18px;font-weight:700;color:#1c1c1e"></div>
+      <div id="plan-desc" style="font-size:12px;color:#8e8e93;margin-top:2px"></div>
+    </div>
+  </div>
+
+  <div class="section-label">Choose a Plan</div>
+
+  <!-- Monthly -->
+  <div class="sc-card" id="plan-monthly" onclick="selectPlan('monthly')" style="flex-direction:column;align-items:stretch;gap:0">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="sc-icon" style="background:#eef2ff;font-size:20px">📅</div>
+      <div class="sc-info">
+        <div class="sc-name">Monthly</div>
+        <div class="sc-desc">Billed monthly · Cancel anytime</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sc-price" id="price-monthly"></div>
+        <div class="sc-sub">/mo</div>
+      </div>
+      <span class="sc-arrow">›</span>
+    </div>
+  </div>
+
+  <!-- Annual -->
+  <div class="sc-card" id="plan-annual" onclick="selectPlan('annual')" style="flex-direction:column;align-items:stretch;gap:0">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="sc-icon" style="background:#f0fdf4;font-size:20px">📆</div>
+      <div class="sc-info">
+        <div class="sc-name">Annual</div>
+        <div class="sc-desc" id="desc-annual">Billed yearly · Best value</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sc-price" id="price-annual"></div>
+        <div class="sc-sub">/yr</div>
+      </div>
+      <span class="sc-arrow">›</span>
+    </div>
+    <div id="badge-annual" style="margin-top:6px;display:none">
+      <span style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px"></span>
+    </div>
+  </div>
+
+  <!-- Lifetime -->
+  <div class="sc-card" id="plan-lifetime" onclick="selectPlan('lifetime')" style="flex-direction:column;align-items:stretch;gap:0">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="sc-icon" style="background:#fff8f0;font-size:20px">👑</div>
+      <div class="sc-info">
+        <div class="sc-name">Lifetime</div>
+        <div class="sc-desc">One-time payment · Own it forever</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sc-price" id="price-lifetime"></div>
+        <div class="sc-sub">one-time</div>
+      </div>
+      <span class="sc-arrow">›</span>
+    </div>
+  </div>
+
+  <div style="padding:0 20px;margin-top:4px">
+    <div style="font-size:11px;color:#aeaeb2;line-height:1.6">
+      🔐 All plans support saved payment methods. Monthly/annual renewals are charged automatically by our backend via Vault Token — no user re-authorisation required.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
      CHECKOUT SCREEN
 ══════════════════════════════ -->
 <div class="screen" id="screen-checkout">
-  <div class="co-back" onclick="goBack()">‹ VaultApp</div>
+  <div class="co-back" onclick="goBack()">‹ DriveX</div>
 
   <!-- PayPal logo -->
   <div class="pp-logo-row">
@@ -362,6 +435,36 @@ body {
       </div>
     </div>
 
+    <!-- Card Fields -->
+    <div class="pm-block" id="card-block" style="display:none">
+      <div class="pm-hd">
+        <span style="font-size:18px">💳</span>
+        <span class="pm-title">Debit / Credit Card</span>
+        <span class="pm-badge badge-card">SAVE CARD</span>
+      </div>
+      <div class="pm-body" style="padding-top:12px">
+        <!-- Sandbox test card hint -->
+        <div id="test-card-hint" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 11px;margin-bottom:10px;font-size:11.5px;color:#92400e;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span>🧪 Sandbox card:</span>
+          <code onclick="copyTestCard()" style="cursor:pointer;background:#fef3c7;border-radius:4px;padding:2px 6px;font-size:12px;letter-spacing:.5px;font-weight:700;">4111 1111 1111 1111</code>
+          <span style="color:#b45309">· Exp <b>12/26</b> · CVV <b>123</b></span>
+          <span onclick="copyTestCard()" style="margin-left:auto;color:#0070e0;cursor:pointer;font-size:11px;font-weight:600;">Copy</span>
+        </div>
+        <div class="cf-label">Card Number</div>
+        <div class="cf-host" id="cf-number"></div>
+        <div class="cf-row">
+          <div>
+            <div class="cf-label">Expiry</div>
+            <div class="cf-host" id="cf-expiry"></div>
+          </div>
+          <div>
+            <div class="cf-label">CVV</div>
+            <div class="cf-host" id="cf-cvv"></div>
+          </div>
+        </div>
+        <button class="btn-card-pay" id="btn-card-pay" onclick="submitCard()">Pay with Card</button>
+      </div>
+    </div>
   </div>
 
   <div class="sec-note">🔒 Secured by PayPal · Sandbox environment</div>
@@ -382,7 +485,7 @@ body {
       <div id="suc-vault-body"></div>
     </div>
     <button class="btn-vault" onclick="openVaultManager()">🔐 View Vault Manager</button>
-    <button class="btn-home"  onclick="showScreen('app')">← Back to VaultApp</button>
+    <button class="btn-home"  onclick="showScreen('app')">← Back to DriveX</button>
   </div>
 </div>
 
@@ -392,7 +495,7 @@ body {
 <div class="screen" id="screen-vault">
   <div class="vm-header">
     <div class="vm-title">🔐 Vault Manager</div>
-    <div class="vm-sub">Saved tokens · Off-session charging</div>
+    <div class="vm-sub">Saved tokens · Off-session charging · AUD</div>
     <div class="vm-cid" id="vm-cid"></div>
   </div>
 
@@ -403,7 +506,7 @@ body {
   <div id="charge-result"></div>
 
   <div style="padding:12px 16px 24px">
-    <button class="btn-home" onclick="showScreen('app')">← Back to VaultApp</button>
+    <button class="btn-home" onclick="showScreen('app')">← Back to DriveX</button>
   </div>
 </div>
 
@@ -416,57 +519,43 @@ body {
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let CFG = {};
-let currentType = '';
+let currentScenario = {};   // built dynamically from product + plan
+let currentType = '';       // kept for vault charge endpoint compat
 let cardFieldsInst = null;
 
-const SCENARIOS = {
-  subscription: {
-    label: 'Pro Monthly Subscription',
-    domain: 'vaultapp.com · Vault-based Recurring',
-    lines: [
-      ['Plan', 'VaultApp Pro'],
-      ['First charge', '$9.99'],
-      ['Renewal', 'Monthly — via vault token off-session'],
-      ['Cancel', 'Via Vault Manager or App'],
-    ],
-    totalLabel: 'Due today',
-    totalAmount: '$9.99',
-    vaultNote: 'PayPal wallet saved on first charge. Future monthly renewals are executed by our backend using the vault token — no redirect needed.',
-    amount: '9.99',
-    successTitle: 'Subscription Active! 🎉',
-    successSub: 'Pro plan activated. Your payment method is saved — we\'ll auto-charge $9.99 each month using the vault token.',
+// ─── Products × Plans ─────────────────────────────────────────────────────────
+const PRODUCTS = {
+  music: {
+    icon: '🎵', name: 'Music Unlimited', color: '#eef2ff',
+    desc: 'Hi-Fi streaming · 50M tracks · Offline cache',
+    plans: {
+      monthly:  { amount: '9.99',   display: 'A$9.99',   save: '',        billingLabel: 'Monthly',  renewNote: 'Auto-renews A$9.99/mo via Vault Token — no redirect required' },
+      annual:   { amount: '89.99',  display: 'A$89.99',  save: 'Save 25%',billingLabel: 'Annual',   renewNote: 'Auto-renews A$89.99/yr via Vault Token — no redirect required' },
+      lifetime: { amount: '199.00', display: 'A$199',    save: 'Best deal',billingLabel: 'Lifetime', renewNote: 'One-time payment — no renewal, yours forever' },
+    },
   },
-  topup: {
-    label: '500 Credits Top-Up',
-    domain: 'vaultapp.com · One-time + Vault',
-    lines: [
-      ['Package', '500 Credits'],
-      ['New balance', '240 CR → 740 CR'],
-      ['Delivery', 'Instant'],
-    ],
-    totalLabel: 'Total',
-    totalAmount: '$19.99',
-    vaultNote: 'Payment method vaulted on success. Next top-up will be one tap — no PayPal login needed.',
-    amount: '19.99',
-    successTitle: 'Top-Up Complete! ⚡',
-    successSub: '500 credits added. Use the vault token for instant future top-ups.',
+  video: {
+    icon: '🎬', name: 'Video Premium', color: '#fff0f5',
+    desc: '4K in-car video · Entertainment · Multi-screen',
+    plans: {
+      monthly:  { amount: '14.99',  display: 'A$14.99',  save: '',        billingLabel: 'Monthly',  renewNote: 'Auto-renews A$14.99/mo via Vault Token — no redirect required' },
+      annual:   { amount: '129.99', display: 'A$129.99', save: 'Save 28%',billingLabel: 'Annual',   renewNote: 'Auto-renews A$129.99/yr via Vault Token — no redirect required' },
+      lifetime: { amount: '299.00', display: 'A$299',    save: 'Best deal',billingLabel: 'Lifetime', renewNote: 'One-time payment — no renewal, yours forever' },
+    },
   },
-  lifetime: {
-    label: 'Lifetime Access',
-    domain: 'vaultapp.com · One-time Purchase',
-    lines: [
-      ['Product', '👑 Lifetime Access'],
-      ['Includes', 'All features · No expiry'],
-      ['Billing', 'One-time only'],
-    ],
-    totalLabel: 'Total',
-    totalAmount: '$299.00',
-    vaultNote: 'Payment method vaulted for convenience on future purchases.',
-    amount: '299.00',
-    successTitle: 'Lifetime Unlocked! 👑',
-    successSub: 'Welcome to VaultApp forever. Your payment method is saved for future use.',
+  cloud: {
+    icon: '☁️', name: 'Cloud Storage', color: '#f0fdf4',
+    desc: 'Dashcam backup · Cross-device sync · 100 GB',
+    plans: {
+      monthly:  { amount: '4.99',   display: 'A$4.99',   save: '',        billingLabel: 'Monthly',  renewNote: 'Auto-renews A$4.99/mo via Vault Token — no redirect required' },
+      annual:   { amount: '44.99',  display: 'A$44.99',  save: 'Save 25%',billingLabel: 'Annual',   renewNote: 'Auto-renews A$44.99/yr via Vault Token — no redirect required' },
+      lifetime: { amount: '99.00',  display: 'A$99',     save: 'Best deal',billingLabel: 'Lifetime', renewNote: 'One-time payment — no renewal, yours forever' },
+    },
   },
 };
+
+let _selectedProductId = '';
+let _selectedPlanId    = '';
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 (async () => {
@@ -474,7 +563,7 @@ const SCENARIOS = {
     const r = await fetch('/api/config');
     CFG = await r.json();
     if (!CFG.ready) document.getElementById('warn-bar').classList.add('show');
-    document.getElementById('vm-cid').textContent = `Customer: ${CFG.customerId}`;
+    document.getElementById('vm-cid').textContent = `Customer ID: ${CFG.customerId}`;
   } catch { showToast('Server not reachable — is it running on port 3000?'); }
 })();
 
@@ -482,7 +571,7 @@ const SCENARIOS = {
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
-  const urls = { app: 'vaultapp.com', checkout: 'paypal.com · Checkout', success: 'paypal.com · Complete', vault: 'vaultapp.com · Vault Manager' };
+  const urls = { app: 'vaultapp.com', plan: 'vaultapp.com · Choose Plan', checkout: 'paypal.com · Checkout', success: 'paypal.com · Complete', vault: 'vaultapp.com · Vault Manager' };
   document.getElementById('url-bar').textContent = urls[name] || 'paypal.com';
   window.scrollTo(0, 0);
 }
@@ -491,15 +580,70 @@ function goBack() {
   if (cur !== 'app') showScreen('app');
 }
 
-// ─── Open scenario ────────────────────────────────────────────────────────────
-async function openScenario(type) {
-  currentType = type;
+// ─── Open product → plan selection ───────────────────────────────────────────
+function openProduct(productId) {
+  _selectedProductId = productId;
+  const p = PRODUCTS[productId];
+
+  document.getElementById('plan-icon').textContent        = p.icon;
+  document.getElementById('plan-icon').style.background   = p.color;
+  document.getElementById('plan-name').textContent        = p.name;
+  document.getElementById('plan-desc').textContent        = p.desc;
+
+  document.getElementById('price-monthly').textContent    = p.plans.monthly.display;
+  document.getElementById('price-annual').textContent     = p.plans.annual.display;
+  document.getElementById('price-lifetime').textContent   = p.plans.lifetime.display;
+
+  const saveBadge = document.querySelector('#badge-annual span');
+  if (p.plans.annual.save) {
+    saveBadge.textContent = p.plans.annual.save;
+    document.getElementById('badge-annual').style.display = 'block';
+  } else {
+    document.getElementById('badge-annual').style.display = 'none';
+  }
+
+  showScreen('plan');
+}
+
+function selectPlan(planId) {
+  _selectedPlanId = planId;
+  const p    = PRODUCTS[_selectedProductId];
+  const plan = p.plans[planId];
+  const isRecurring = planId !== 'lifetime';
+
+  // Build dynamic scenario
+  const billingLines = isRecurring
+    ? [['Service', `${p.icon} ${p.name}`], ['Billing', plan.billingLabel], ['First charge', plan.display], ['Renewal', 'Auto via Vault Token (backend)'], ['Cancel', 'Via Vault Manager or App']]
+    : [['Service', `${p.icon} ${p.name}`], ['Billing', 'Lifetime — one-time'], ['Amount', plan.display], ['Access', 'Permanent']];
+
+  currentScenario = {
+    label:        `${p.name} · ${plan.billingLabel}`,
+    domain:       `vaultapp.com · ${plan.billingLabel} Plan`,
+    lines:        billingLines,
+    totalLabel:   isRecurring ? 'Due today' : 'Total',
+    totalAmount:  plan.display,
+    vaultNote:    isRecurring
+      ? `Your payment method is saved on first charge. ${plan.renewNote}.`
+      : `Your payment method is saved after checkout for fast future purchases.`,
+    amount:       plan.amount,
+    successTitle: isRecurring ? `${p.name} Active! ${p.icon}` : `${p.name} Lifetime Unlocked! ${p.icon}`,
+    successSub:   isRecurring
+      ? `${plan.billingLabel} plan activated. Payment method saved — we'll auto-charge via Vault Token.`
+      : `Thanks for your purchase! ${p.name} lifetime access is now active.`,
+  };
+  currentType = planId === 'lifetime' ? 'lifetime' : 'subscription';
+
+  openCheckout();
+}
+
+// ─── Open checkout (was openScenario) ────────────────────────────────────────
+async function openCheckout() {
   cardFieldsInst = null;
-  const cfg = SCENARIOS[type];
+  const cfg = currentScenario;
 
   // Reset
   ['paypal-btn-wrap','apple-btn-wrap','cf-number','cf-expiry','cf-cvv']
-    .forEach(id => { document.getElementById(id).innerHTML = ''; });
+    .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
   document.getElementById('card-block').style.display  = 'none';
   document.getElementById('apple-block').style.display = 'none';
   document.getElementById('pm-area').style.display     = 'none';
@@ -526,7 +670,7 @@ async function openScenario(type) {
   document.getElementById('vault-note-text').textContent = cfg.vaultNote;
   showScreen('checkout');
 
-  await loadSDKAndRender(type);
+  await loadSDKAndRender(currentType);
 }
 
 // ─── Load PayPal JS SDK ───────────────────────────────────────────────────────
@@ -550,11 +694,12 @@ async function loadSDKAndRender(type) {
 
     // 3. Load SDK — always intent=capture (all flows use Orders API)
     const params = new URLSearchParams({
-      'client-id': CFG.clientId,
-      currency:    'USD',
-      vault:       'true',
-      intent:      'capture',
-      components:  'buttons',
+      'client-id':      CFG.clientId,
+      currency:         'AUD',
+      vault:            'true',
+      intent:           'capture',
+      components:       'buttons,card-fields',
+      'disable-funding': 'credit,paylater,applepay,venmo',
     });
     log('→ Loading PayPal SDK (intent=capture, vault=true)');
     await new Promise((res, rej) => {
@@ -572,7 +717,7 @@ async function loadSDKAndRender(type) {
     document.getElementById('pm-area').style.display     = 'block';
 
     renderPayPalButtons(type);
-    renderApplePay(type);
+    await renderCardFields(type);
 
   } catch (e) {
     document.getElementById('sdk-spinner').style.display = 'none';
@@ -583,7 +728,6 @@ async function loadSDKAndRender(type) {
 
 // ─── PayPal Buttons (all scenarios) ──────────────────────────────────────────
 function renderPayPalButtons(type) {
-  const cfg = SCENARIOS[type];
   paypal.Buttons({
     style: { color: 'blue', shape: 'pill', height: 44 },
 
@@ -615,11 +759,13 @@ function renderPayPalButtons(type) {
   }).render('#paypal-btn-wrap');
 }
 
-// ─── Card Fields ──────────────────────────────────────────────────────────────
+
+// ─── Card Fields ─────────────────────────────────────────────────────────────
 async function renderCardFields(type) {
   if (!window.paypal?.CardFields) return;
   try {
-    const cf = paypal.CardFields({
+    const cfg = SCENARIOS[type];
+    cardFieldsInst = paypal.CardFields({
       createOrder: async () => {
         log(`→ POST /api/order/create  type=${type} (card)`);
         const d = await fetch('/api/order/create', {
@@ -631,44 +777,42 @@ async function renderCardFields(type) {
         return d.id;
       },
       onApprove: async (data) => {
-        log(`→ POST /api/order/capture  orderId=${data.orderID}`);
+        log(`→ POST /api/order/capture  orderId=${data.orderID} (card)`);
         const cap = await fetch('/api/order/capture', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId: data.orderID }),
         }).then(r => r.json());
-
         const vaultId = cap?.payment_source?.card?.attributes?.vault?.id ?? null;
-        log(`← ${cap.status}${vaultId ? '  card-vault=' + vaultId : ''}`, 'ok');
-
-        const btn = document.getElementById('btn-card-pay');
-        btn.textContent = 'Pay with Card'; btn.disabled = false;
+        log(`← ${cap.status}${vaultId ? '  vault=' + vaultId : ''}`, 'ok');
         showSuccess({ type, orderId: data.orderID, vaultId, vaultSource: 'card', cap });
       },
-      onError: (e) => {
-        log('Card error: ' + JSON.stringify(e), 'err');
-        const btn = document.getElementById('btn-card-pay');
-        btn.textContent = 'Pay with Card'; btn.disabled = false;
-        showToast('Card error — Advanced Card Payments must be enabled in sandbox settings');
-      },
+      onError: (e) => { log('Card error: ' + JSON.stringify(e), 'err'); showToast('Card error — see API log'); },
+      style: { input: { fontSize: '14px', fontFamily: '-apple-system, sans-serif', color: '#1c1c1e' } },
     });
 
-    if (cf.isEligible()) {
-      cardFieldsInst = cf;
-      cf.NumberField({ placeholder: '4111 1111 1111 1111' }).render('#cf-number');
-      cf.ExpiryField({ placeholder: 'MM / YY' }).render('#cf-expiry');
-      cf.CVVField({ placeholder: 'CVV' }).render('#cf-cvv');
+    if (cardFieldsInst.isEligible()) {
+      cardFieldsInst.NumberField({ placeholder: '4111 1111 1111 1111' }).render('#cf-number');
+      cardFieldsInst.ExpiryField({ placeholder: 'MM/YY' }).render('#cf-expiry');
+      cardFieldsInst.CVVField({ placeholder: 'CVV' }).render('#cf-cvv');
       document.getElementById('card-block').style.display = 'block';
+      log('← Card Fields ready', 'ok');
     }
   } catch (e) {
-    log('Card fields unavailable: ' + e.message, 'err');
+    log('Card Fields init error: ' + e.message, 'err');
   }
 }
+
 async function submitCard() {
   if (!cardFieldsInst) return;
   const btn = document.getElementById('btn-card-pay');
-  btn.textContent = 'Processing…'; btn.disabled = true;
-  try { await cardFieldsInst.submit(); }
-  catch (e) { btn.textContent = 'Pay with Card'; btn.disabled = false; showToast(e.message); }
+  btn.disabled = true; btn.textContent = '⏳ Processing…';
+  try {
+    await cardFieldsInst.submit();
+  } catch (e) {
+    log('Card submit error: ' + e.message, 'err');
+    showToast(e.message || 'Card submit failed');
+    btn.disabled = false; btn.textContent = 'Pay with Card';
+  }
 }
 
 // ─── Apple Pay ────────────────────────────────────────────────────────────────
@@ -697,7 +841,7 @@ function renderApplePay(type) {
 
 // ─── Success ──────────────────────────────────────────────────────────────────
 function showSuccess({ type, orderId, vaultId, vaultSource, cap }) {
-  const cfg = SCENARIOS[type];
+  const cfg = currentScenario;
   document.getElementById('suc-title').textContent = cfg.successTitle;
   document.getElementById('suc-sub').textContent   = cfg.successSub;
 
@@ -708,7 +852,7 @@ function showSuccess({ type, orderId, vaultId, vaultSource, cap }) {
   if (vaultId)     rows.push(['Vault Token', vaultId, true]);
   if (vaultSource) rows.push(['Method',      { paypal: '💙 PayPal Wallet', card: '💳 Card', apple_pay: ' Apple Pay' }[vaultSource] || vaultSource]);
   if (cap?.status) rows.push(['Status',      cap.status]);
-  if (type === 'subscription') rows.push(['Next charge', 'Backend off-session (monthly)']);
+  if (currentType === 'subscription') rows.push(['Renewal', 'Auto-charged via Vault Token']);
 
   vr.style.display = vaultId ? 'block' : 'none';
   vb.innerHTML = rows.map(([k, v, tok]) =>
@@ -804,6 +948,11 @@ async function deleteToken(id) {
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
+function copyTestCard() {
+  navigator.clipboard.writeText('4111111111111111').catch(() => {});
+  showToast('Card number copied — paste into the card field');
+}
+
 function log(msg, cls = '') {
   const box = document.getElementById('log-box');
   const el  = document.createElement('div');
