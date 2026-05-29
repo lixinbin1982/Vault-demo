@@ -368,9 +368,11 @@ app.post('/api/vault/charge', async (req, res) => {
       }],
       payment_source: {
         paypal: {
-          vault_id: vaultId,                      // ← off-session key
-          experience_context: {
-            shipping_preference: 'NO_SHIPPING',
+          vault_id: vaultId,
+          stored_credential: {
+            payment_initiator: 'MERCHANT',        // ← merchant-initiated, no user present
+            payment_type:      'RECURRING',
+            usage:             'SUBSEQUENT',      // ← subsequent charge after initial consent
           },
         },
       },
@@ -382,20 +384,16 @@ app.post('/api/vault/charge', async (req, res) => {
       });
     }
 
-    // Step 2: Capture immediately (no user redirect needed)
-    const captureRes = await pp(
-      'POST',
-      `/v2/checkout/orders/${orderRes.data.id}/capture`,
-      {},
-      `VAULT-CHARGE-${vaultId}-${Date.now()}`
-    );
-
-    res.status(captureRes.status).json({
-      orderId:  orderRes.data.id,
-      status:   captureRes.data?.status,
+    // When vault_id is in payment_source, PayPal auto-captures on order creation
+    // — no separate capture call needed.
+    const d = orderRes.data;
+    const capture = d.purchase_units?.[0]?.payments?.captures?.[0];
+    res.status(orderRes.status).json({
+      orderId: d.id,
+      status:  capture?.status || d.status,
       amount,
       vaultId,
-      capture:  captureRes.data,
+      capture: d,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -419,7 +417,14 @@ app.post('/api/vault/card-charge', async (req, res) => {
         description,
       }],
       payment_source: {
-        card: { vault_id: vaultId },              // ← saved card off-session
+        card: {
+          vault_id: vaultId,
+          stored_credential: {
+            payment_initiator: 'MERCHANT',
+            payment_type:      'RECURRING',
+            usage:             'SUBSEQUENT',
+          },
+        },
       },
     });
 
@@ -429,19 +434,15 @@ app.post('/api/vault/card-charge', async (req, res) => {
       });
     }
 
-    const captureRes = await pp(
-      'POST',
-      `/v2/checkout/orders/${orderRes.data.id}/capture`,
-      {},
-      `CARD-CHARGE-${vaultId}-${Date.now()}`
-    );
-
-    res.status(captureRes.status).json({
-      orderId:  orderRes.data.id,
-      status:   captureRes.data?.status,
+    // Same as PayPal vault — auto-captured on order creation
+    const d = orderRes.data;
+    const capture = d.purchase_units?.[0]?.payments?.captures?.[0];
+    res.status(orderRes.status).json({
+      orderId: d.id,
+      status:  capture?.status || d.status,
       amount,
       vaultId,
-      capture:  captureRes.data,
+      capture: d,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
