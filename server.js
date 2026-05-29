@@ -24,6 +24,12 @@ const express = require('express');
 const fetch   = require('node-fetch');
 const { v4: uuid } = require('uuid');
 
+// ── Fallback sandbox credentials (demo only) ─────────────────────────────────
+if (!process.env.PAYPAL_CLIENT_ID)
+  process.env.PAYPAL_CLIENT_ID = 'AYTDZp4ybe95PktB8VgNAhY4NNXBi_5AJ6vmI7N4jImUiMq0bMH76Wd8Ij3vQnYSnYvD2-bI06BCOQE3';
+if (!process.env.PAYPAL_CLIENT_SECRET)
+  process.env.PAYPAL_CLIENT_SECRET = 'EA6a7MXqtmPhy-PSS9rY-PNUgnMuX6aWJUuS3DZG_FghiZQ-8dS-B2Wz6nmxo53ZvUF9ZcaKx5tp9N46';
+
 const app        = express();
 const BASE       = 'https://api-m.sandbox.paypal.com';
 const PORT       = process.env.PORT || 3000;
