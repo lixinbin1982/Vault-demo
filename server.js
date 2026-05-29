@@ -122,6 +122,8 @@ app.get('/api/debug/token', async (req, res) => {
 // ─── Credentials guard ───────────────────────────────────────────────────────
 app.use('/api', (req, res, next) => {
   if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    // Allow /api/config and /api/status to pass through even without creds
+    if (req.path === '/config' || req.path === '/status') return next();
     return res.status(503).json({
       error:  'Missing credentials',
       detail: 'Copy .env.example → .env and fill in PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET',

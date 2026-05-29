@@ -764,13 +764,12 @@ function renderPayPalButtons(type) {
 async function renderCardFields(type) {
   if (!window.paypal?.CardFields) return;
   try {
-    const cfg = SCENARIOS[type];
     cardFieldsInst = paypal.CardFields({
       createOrder: async () => {
-        log(`→ POST /api/order/create  type=${type} (card)`);
+        log(`→ POST /api/order/create  type=${currentType} (card)`);
         const d = await fetch('/api/order/create', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type, customerId: CFG.customerId }),
+          body: JSON.stringify({ type: currentType, customerId: CFG.customerId }),
         }).then(r => r.json());
         if (!d.id) throw new Error(d.message || JSON.stringify(d));
         log(`← Order ID: ${d.id}`, 'ok');
@@ -784,7 +783,7 @@ async function renderCardFields(type) {
         }).then(r => r.json());
         const vaultId = cap?.payment_source?.card?.attributes?.vault?.id ?? null;
         log(`← ${cap.status}${vaultId ? '  vault=' + vaultId : ''}`, 'ok');
-        showSuccess({ type, orderId: data.orderID, vaultId, vaultSource: 'card', cap });
+        showSuccess({ type: currentType, orderId: data.orderID, vaultId, vaultSource: 'card', cap });
       },
       onError: (e) => { log('Card error: ' + JSON.stringify(e), 'err'); showToast('Card error — see API log'); },
       style: { input: { fontSize: '14px', fontFamily: '-apple-system, sans-serif', color: '#1c1c1e' } },
