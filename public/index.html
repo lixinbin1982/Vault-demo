@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>VaultApp — PayPal Vault Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  background: #e8e8ed;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+.phone {
+  width: 100%;
+  max-width: 430px;
+  background: #f0f0f5;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ── Safari chrome ── */
+.safari {
+  background: #f2f2f7;
+  border-bottom: 1px solid #d1d1d6;
+  padding: 8px 12px 7px;
+  position: sticky; top: 0; z-index: 100;
+}
+.safari-row { display: flex; align-items: center; gap: 8px; }
+.safari-back { color: #007aff; font-size: 22px; cursor: pointer; user-select: none; min-width: 20px; }
+.safari-url {
+  flex: 1; background: #e5e5ea; border-radius: 9px;
+  padding: 5px 10px; display: flex; align-items: center; gap: 5px;
+}
+.safari-url span { font-size: 13px; color: #3c3c43; }
+
+/* ── Screens ── */
+.screen { display: none; min-height: calc(100vh - 46px); }
+.screen.active { display: block; }
+
+/* ── Setup warning ── */
+.warn-bar {
+  background: #ff3b30; color: #fff;
+  padding: 10px 16px; font-size: 13px; line-height: 1.4;
+  display: none;
+}
+.warn-bar.show { display: block; }
+.warn-bar a { color: #ffe; }
+
+/* ── App screen ── */
+.app-header {
+  background: linear-gradient(160deg, #003087 0%, #0070e0 100%);
+  padding: 24px 20px 22px; color: #fff;
+}
+.app-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.app-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.app-name { font-size: 20px; font-weight: 700; }
+.app-tagline { font-size: 13px; opacity: .7; margin-bottom: 16px; }
+.balance-row {
+  background: rgba(255,255,255,.15); border-radius: 14px;
+  padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+}
+.bal-label { font-size: 11px; opacity: .7; }
+.bal-amount { font-size: 26px; font-weight: 700; }
+.bal-tag { background: rgba(255,255,255,.2); border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+
+.section-label { font-size: 12px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: .6px; padding: 18px 20px 8px; }
+
+.sc-card {
+  margin: 0 16px 10px; background: #fff;
+  border-radius: 16px; border: 1.5px solid #e8e8ed;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: border-color .15s, box-shadow .15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.sc-card:hover { border-color: #0070e0; box-shadow: 0 2px 14px rgba(0,112,224,.15); }
+.sc-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.sc-info { flex: 1; }
+.sc-name { font-size: 15px; font-weight: 600; color: #1c1c1e; margin-bottom: 2px; }
+.sc-desc { font-size: 12px; color: #8e8e93; line-height: 1.4; }
+.sc-price { font-size: 17px; font-weight: 700; color: #0070e0; text-align: right; }
+.sc-sub  { font-size: 10px; color: #8e8e93; text-align: right; }
+.sc-arrow { color: #c7c7cc; margin-left: 4px; }
+
+.vault-card {
+  margin: 6px 16px 24px; background: #f0f7ff;
+  border-radius: 14px; border: 1.5px solid #bfdbfe;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: background .15s;
+}
+.vault-card:hover { background: #e0f0ff; }
+
+/* ── Checkout screen ── */
+.co-back { display: flex; align-items: center; gap: 5px; color: #0070e0; font-size: 15px; cursor: pointer; padding: 14px 20px 2px; width: fit-content; }
+.pp-logo-row { display: flex; justify-content: center; padding: 12px 0 10px; }
+.order-card {
+  margin: 0 16px 14px; background: #f7f9fc;
+  border-radius: 14px; border: 1px solid #e6eaf0; padding: 14px;
+}
+.order-merchant { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.merch-icon { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #003087, #009cde); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; }
+.merch-name { font-size: 14px; font-weight: 600; }
+.merch-domain { font-size: 11px; color: #8e8e93; }
+.order-line { display: flex; justify-content: space-between; font-size: 13px; color: #3c3c43; margin-bottom: 4px; }
+.order-line span:last-child { font-weight: 500; color: #1c1c1e; }
+.order-divider { border: none; border-top: 1px solid #e6eaf0; margin: 8px 0; }
+.order-total { display: flex; justify-content: space-between; align-items: center; }
+.total-label { font-size: 15px; font-weight: 600; }
+.total-amount { font-size: 20px; font-weight: 700; color: #0070e0; }
+
+/* vault-save note */
+.vault-note {
+  margin: -4px 16px 12px; background: #f0f7ff;
+  border: 1px solid #bfdbfe; border-radius: 10px;
+  padding: 10px 12px; font-size: 12px; color: #1e40af;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+
+/* Payment method blocks */
+.pm-label { font-size: 12px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; padding: 12px 20px 6px; }
+.pm-block {
+  margin: 0 16px 10px; background: #fff;
+  border-radius: 14px; border: 1.5px solid #e8e8ed; overflow: hidden;
+}
+.pm-hd { display: flex; align-items: center; gap: 8px; padding: 12px 14px; }
+.pm-title { font-size: 14px; font-weight: 600; flex: 1; }
+.pm-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+.badge-vault { background: #eff6ff; color: #0070e0; }
+.badge-card  { background: #f0fdf4; color: #15803d; }
+.pm-body { padding: 0 14px 14px; border-top: 1px solid #f0f0f5; }
+
+/* PayPal button container */
+#paypal-btn-wrap { min-height: 48px; padding-top: 12px; }
+#apple-btn-wrap  { padding-top: 10px; }
+
+/* Card fields */
+.cf-label { font-size: 11px; color: #6c757d; font-weight: 600; margin-bottom: 4px; }
+.cf-host {
+  height: 44px; border: 1.5px solid #e6eaf0; border-radius: 10px;
+  margin-bottom: 10px; overflow: hidden; background: #fff;
+}
+.cf-row { display: flex; gap: 10px; }
+.cf-row > div { flex: 1; }
+.btn-card-pay {
+  width: 100%; background: #1c1c1e; color: #fff;
+  border: none; border-radius: 24px; padding: 13px;
+  font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px;
+}
+.btn-card-pay:disabled { background: #c7c7cc; cursor: not-allowed; }
+
+/* Spinner */
+.spinner-row { display: flex; align-items: center; gap: 10px; padding: 20px; color: #8e8e93; font-size: 14px; justify-content: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { width: 20px; height: 20px; border: 2px solid #e8e8ed; border-top-color: #0070e0; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+
+.sec-note { text-align: center; font-size: 12px; color: #aeaeb2; padding: 6px 0 12px; }
+
+/* API log */
+.log-toggle { text-align: center; font-size: 12px; color: #0070e0; cursor: pointer; padding: 6px; }
+.log-box {
+  margin: 0 16px 20px; background: #1e2330;
+  border-radius: 10px; padding: 10px;
+  display: none; max-height: 180px; overflow-y: auto;
+}
+.log-box.open { display: block; }
+.log-line { font-family: monospace; font-size: 11px; color: #a5f3fc; margin-bottom: 3px; }
+.log-line.ok  { color: #4ade80; }
+.log-line.err { color: #f87171; }
+
+/* ── Success screen ── */
+.success-wrap { display: flex; flex-direction: column; align-items: center; padding: 36px 24px 24px; text-align: center; }
+@keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.success-circle { width: 76px; height: 76px; background: #00b86b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; color: #fff; margin-bottom: 18px; animation: pop .4s cubic-bezier(.175,.885,.32,1.275); }
+.success-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.success-sub { font-size: 14px; color: #6c757d; margin-bottom: 20px; line-height: 1.5; }
+.vault-result { width: 100%; background: #f0fdf4; border: 1.5px solid #4ade80; border-radius: 14px; padding: 16px; text-align: left; margin-bottom: 16px; }
+.vr-title { font-size: 12px; font-weight: 700; color: #15803d; margin-bottom: 10px; }
+.vr-row { display: flex; gap: 6px; margin-bottom: 5px; align-items: flex-start; }
+.vr-key { font-size: 11px; color: #6c757d; min-width: 88px; flex-shrink: 0; padding-top: 2px; }
+.vr-val { font-size: 12px; font-weight: 600; color: #1c1c1e; font-family: monospace; word-break: break-all; }
+.vr-val.token { color: #0070e0; }
+.btn-vault { width: 100%; background: #0070e0; color: #fff; border: none; border-radius: 24px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+.btn-home  { width: 100%; background: #e8e8ed; color: #1c1c1e; border: none; border-radius: 24px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+/* ── Vault Manager ── */
+.vm-header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 20px; color: #fff; }
+.vm-title { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.vm-sub { font-size: 13px; opacity: .7; margin-top: 4px; }
+.vm-cid { font-family: monospace; font-size: 11px; opacity: .45; margin-top: 8px; }
+.btn-refresh { margin: 12px 16px 4px; background: #eff6ff; color: #0070e0; border: none; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+.token-card { margin: 0 16px 10px; background: #fff; border-radius: 14px; border: 1.5px solid #e8e8ed; overflow: hidden; }
+.tc-hd { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.tc-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.tc-type { font-size: 13px; font-weight: 700; color: #1c1c1e; }
+.tc-id { font-size: 11px; font-family: monospace; color: #8e8e93; margin-top: 1px; word-break: break-all; }
+.tc-amount-row { display: flex; gap: 8px; padding: 0 14px 10px; align-items: center; }
+.tc-amount { flex: 1; border: 1.5px solid #e6eaf0; border-radius: 8px; padding: 8px 10px; font-size: 14px; outline: none; }
+.tc-amount:focus { border-color: #0070e0; }
+.tc-actions { display: flex; gap: 8px; padding: 0 14px 12px; }
+.btn-charge { flex: 1; background: #0070e0; color: #fff; border: none; border-radius: 20px; padding: 9px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-delete { flex: 1; background: #fff0f0; color: #ff3b30; border: 1px solid #fca5a5; border-radius: 20px; padding: 9px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+.charge-result { margin: 0 16px 10px; background: #f0fdf4; border: 1.5px solid #4ade80; border-radius: 12px; padding: 14px; }
+.charge-result.fail { background: #fff0f0; border-color: #fca5a5; }
+.cr-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+
+.empty { text-align: center; padding: 40px 20px; color: #8e8e93; font-size: 14px; }
+.empty-icon { font-size: 38px; margin-bottom: 12px; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1c1c1e; color: #fff; border-radius: 12px; padding: 12px 20px; font-size: 13px; max-width: 360px; z-index: 999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- Setup warning -->
+<div class="warn-bar" id="warn-bar">
+  ⚠️ No PayPal credentials. Copy <code>.env.example → .env</code>, fill in credentials, restart server.
+  <a href="https://developer.paypal.com/dashboard/applications/sandbox" target="_blank">Get sandbox keys →</a>
+</div>
+
+<!-- Safari chrome -->
+<div class="safari">
+  <div class="safari-row">
+    <span class="safari-back" onclick="goBack()">‹</span>
+    <div class="safari-url">
+      <span style="font-size:11px">🔒</span>
+      <span id="url-bar">vaultapp.com</span>
+    </div>
+    <span style="font-size:13px;color:#007aff">⊞</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     APP SCREEN
+══════════════════════════════ -->
+<div class="screen active" id="screen-app">
+  <div class="app-header">
+    <div class="app-top">
+      <div class="app-icon">⚡</div>
+      <div class="app-name">VaultApp</div>
+    </div>
+    <div class="app-tagline">PayPal Vault-Only Sandbox Demo</div>
+    <div class="balance-row">
+      <div><div class="bal-label">Credits</div><div class="bal-amount">240 CR</div></div>
+      <div class="bal-tag">✦ Pro</div>
+    </div>
+  </div>
+
+  <div class="section-label">Choose Scenario</div>
+
+  <div class="sc-card" onclick="openScenario('subscription')">
+    <div class="sc-icon" style="background:#eef2ff">🔄</div>
+    <div class="sc-info">
+      <div class="sc-name">Subscription</div>
+      <div class="sc-desc">First charge → vault token → backend auto-renews monthly off-session</div>
+    </div>
+    <div>
+      <div class="sc-price">$9.99</div>
+      <div class="sc-sub">/month</div>
+      <span class="sc-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="sc-card" onclick="openScenario('topup')">
+    <div class="sc-icon" style="background:#f0fdf4">💳</div>
+    <div class="sc-info">
+      <div class="sc-name">Credit Top-Up</div>
+      <div class="sc-desc">One-time + vault for quick repeat purchases</div>
+    </div>
+    <div>
+      <div class="sc-price">$19.99</div>
+      <div class="sc-sub">one-time</div>
+      <span class="sc-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="sc-card" onclick="openScenario('lifetime')">
+    <div class="sc-icon" style="background:#fff8f0">👑</div>
+    <div class="sc-info">
+      <div class="sc-name">Lifetime Access</div>
+      <div class="sc-desc">Single charge + optional vault for future</div>
+    </div>
+    <div>
+      <div class="sc-price">$299</div>
+      <div class="sc-sub">once</div>
+      <span class="sc-arrow">›</span>
+    </div>
+  </div>
+
+  <div class="vault-card" onclick="openVaultManager()">
+    <span style="font-size:24px">🔐</span>
+    <div>
+      <div style="font-size:14px;font-weight:700;color:#0070e0">Vault Manager</div>
+      <div style="font-size:12px;color:#6c757d">Saved tokens · Off-session charging</div>
+    </div>
+    <span style="color:#0070e0;margin-left:auto">›</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CHECKOUT SCREEN
+══════════════════════════════ -->
+<div class="screen" id="screen-checkout">
+  <div class="co-back" onclick="goBack()">‹ VaultApp</div>
+
+  <!-- PayPal logo -->
+  <div class="pp-logo-row">
+    <svg height="26" viewBox="0 0 101 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.237 2.8H4.437C3.937 2.8 3.537 3.1 3.437 3.6L.337 23.4c-.1.4.2.7.6.7h3.7c.5 0 .9-.3 1-.8l.8-5.1c.1-.5.5-.8 1-.8h2.5c5.1 0 8-2.6 8.8-7.7.3-2.3 0-4.1-1-5.4-1.1-1.4-3-2.5-5.5-2.5zm.8 7.2c-.4 2.9-2.6 2.9-4.7 2.9h-1.2l.8-5c0-.3.3-.5.6-.5h.5c1.4 0 2.7 0 3.4.8.5.5.7 1 .6 1.8z" fill="#003087"/>
+      <path d="M35.437 9.9h-3.7c-.3 0-.6.2-.6.5l-.2 1.1-.3-.4c-.9-1.3-2.7-1.7-4.5-1.7-4.1 0-7.5 3-8.2 7.2-.4 2.1.1 4.1 1.3 5.5 1.1 1.3 2.7 1.9 4.6 1.9 3.3 0 5.1-2.1 5.1-2.1l-.2 1.1c-.1.4.2.7.6.7h3.3c.5 0 .9-.3 1-.8l2-12.2c.3-.4.1-.8-.2-.8zm-5.3 6.8c-.4 2-2 3.4-4.1 3.4-1 0-1.8-.3-2.4-1-.6-.7-.8-1.6-.6-2.6.4-2 2-3.4 4.1-3.4 1 0 1.8.3 2.4 1 .6.8.7 1.7.6 1.6z" fill="#003087"/>
+      <path d="M55.337 9.9h-3.7c-.4 0-.7.2-.9.5l-5.2 7.7-2.2-7.4c-.1-.5-.6-.8-1-.8h-3.7c-.4 0-.7.4-.6.8l4.2 12.4-4 5.8c-.3.4 0 .9.5.9h3.7c.4 0 .7-.2.9-.5l12.5-18.5c.3-.4 0-.9-.5-.9z" fill="#003087"/>
+      <path d="M68.637 2.8h-7.8c-.5 0-.9.3-1 .8l-3.1 19.8c-.1.4.2.7.6.7h4c.4 0 .7-.3.7-.6l.9-5.3c.1-.5.5-.8 1-.8h2.5c5.1 0 8-2.6 8.8-7.7.3-2.3 0-4.1-1-5.4-1.1-1.4-3-2.5-5.6-2.5zm.8 7.2c-.4 2.9-2.6 2.9-4.7 2.9h-1.2l.8-5c0-.3.3-.5.6-.5h.5c1.4 0 2.7 0 3.4.8.5.5.7 1 .6 1.8z" fill="#009cde"/>
+      <path d="M91.837 9.9h-3.7c-.3 0-.6.2-.6.5l-.2 1.1-.3-.4c-.9-1.3-2.7-1.7-4.5-1.7-4.1 0-7.5 3-8.2 7.2-.4 2.1.1 4.1 1.3 5.5 1.1 1.3 2.7 1.9 4.6 1.9 3.3 0 5.1-2.1 5.1-2.1l-.2 1.1c-.1.4.2.7.6.7h3.3c.5 0 .9-.3 1-.8l2-12.2c.2-.4 0-.8-.2-.8zm-5.4 6.8c-.4 2-2 3.4-4.1 3.4-1 0-1.8-.3-2.4-1-.6-.7-.8-1.6-.6-2.6.4-2 2-3.4 4.1-3.4 1 0 1.8.3 2.4 1 .5.8.7 1.7.6 1.6z" fill="#009cde"/>
+      <path d="M95.237 3.3L92.037 23.4c-.1.4.2.7.6.7h3.2c.5 0 .9-.3 1-.8L100 3.5c.1-.4-.2-.7-.6-.7h-3.6c-.3 0-.5.2-.6.5z" fill="#009cde"/>
+    </svg>
+  </div>
+
+  <!-- Order summary -->
+  <div class="order-card" id="order-summary"></div>
+
+  <!-- Vault note -->
+  <div class="vault-note">
+    🔐 <span id="vault-note-text"></span>
+  </div>
+
+  <!-- SDK loading -->
+  <div class="spinner-row" id="sdk-spinner" style="display:none">
+    <div class="spin"></div> Loading PayPal SDK…
+  </div>
+
+  <!-- Payment methods -->
+  <div id="pm-area" style="display:none">
+
+    <div class="pm-label">Pay with</div>
+
+    <!-- PayPal Wallet -->
+    <div class="pm-block">
+      <div class="pm-hd">
+        <span style="font-size:18px">💙</span>
+        <span class="pm-title">PayPal</span>
+        <span class="pm-badge badge-vault">SAVE WALLET</span>
+      </div>
+      <div class="pm-body">
+        <div id="paypal-btn-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Apple Pay -->
+    <div class="pm-block" id="apple-block" style="display:none">
+      <div class="pm-hd">
+        <span style="font-size:18px"></span>
+        <span class="pm-title">Apple Pay</span>
+      </div>
+      <div class="pm-body">
+        <div id="apple-btn-wrap"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sec-note">🔒 Secured by PayPal · Sandbox environment</div>
+  <div class="log-toggle" onclick="toggleLog()">🖥 API calls ▾</div>
+  <div class="log-box" id="log-box"></div>
+</div>
+
+<!-- ══════════════════════════════
+     SUCCESS SCREEN
+══════════════════════════════ -->
+<div class="screen" id="screen-success">
+  <div class="success-wrap">
+    <div class="success-circle">✓</div>
+    <div class="success-title" id="suc-title"></div>
+    <div class="success-sub"   id="suc-sub"></div>
+    <div class="vault-result" id="suc-vault">
+      <div class="vr-title">🔐 Vault Token Saved</div>
+      <div id="suc-vault-body"></div>
+    </div>
+    <button class="btn-vault" onclick="openVaultManager()">🔐 View Vault Manager</button>
+    <button class="btn-home"  onclick="showScreen('app')">← Back to VaultApp</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     VAULT MANAGER SCREEN
+══════════════════════════════ -->
+<div class="screen" id="screen-vault">
+  <div class="vm-header">
+    <div class="vm-title">🔐 Vault Manager</div>
+    <div class="vm-sub">Saved tokens · Off-session charging</div>
+    <div class="vm-cid" id="vm-cid"></div>
+  </div>
+
+  <div class="section-label">Saved Payment Methods</div>
+  <button class="btn-refresh" onclick="loadTokens()">↻ Refresh</button>
+
+  <div id="token-list"></div>
+  <div id="charge-result"></div>
+
+  <div style="padding:12px 16px 24px">
+    <button class="btn-home" onclick="showScreen('app')">← Back to VaultApp</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+</div><!-- /phone -->
+<script>
+'use strict';
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let CFG = {};
+let currentType = '';
+let cardFieldsInst = null;
+
+const SCENARIOS = {
+  subscription: {
+    label: 'Pro Monthly Subscription',
+    domain: 'vaultapp.com · Vault-based Recurring',
+    lines: [
+      ['Plan', 'VaultApp Pro'],
+      ['First charge', '$9.99'],
+      ['Renewal', 'Monthly — via vault token off-session'],
+      ['Cancel', 'Via Vault Manager or App'],
+    ],
+    totalLabel: 'Due today',
+    totalAmount: '$9.99',
+    vaultNote: 'PayPal wallet saved on first charge. Future monthly renewals are executed by our backend using the vault token — no redirect needed.',
+    amount: '9.99',
+    successTitle: 'Subscription Active! 🎉',
+    successSub: 'Pro plan activated. Your payment method is saved — we\'ll auto-charge $9.99 each month using the vault token.',
+  },
+  topup: {
+    label: '500 Credits Top-Up',
+    domain: 'vaultapp.com · One-time + Vault',
+    lines: [
+      ['Package', '500 Credits'],
+      ['New balance', '240 CR → 740 CR'],
+      ['Delivery', 'Instant'],
+    ],
+    totalLabel: 'Total',
+    totalAmount: '$19.99',
+    vaultNote: 'Payment method vaulted on success. Next top-up will be one tap — no PayPal login needed.',
+    amount: '19.99',
+    successTitle: 'Top-Up Complete! ⚡',
+    successSub: '500 credits added. Use the vault token for instant future top-ups.',
+  },
+  lifetime: {
+    label: 'Lifetime Access',
+    domain: 'vaultapp.com · One-time Purchase',
+    lines: [
+      ['Product', '👑 Lifetime Access'],
+      ['Includes', 'All features · No expiry'],
+      ['Billing', 'One-time only'],
+    ],
+    totalLabel: 'Total',
+    totalAmount: '$299.00',
+    vaultNote: 'Payment method vaulted for convenience on future purchases.',
+    amount: '299.00',
+    successTitle: 'Lifetime Unlocked! 👑',
+    successSub: 'Welcome to VaultApp forever. Your payment method is saved for future use.',
+  },
+};
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    const r = await fetch('/api/config');
+    CFG = await r.json();
+    if (!CFG.ready) document.getElementById('warn-bar').classList.add('show');
+    document.getElementById('vm-cid').textContent = `Customer: ${CFG.customerId}`;
+  } catch { showToast('Server not reachable — is it running on port 3000?'); }
+})();
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const urls = { app: 'vaultapp.com', checkout: 'paypal.com · Checkout', success: 'paypal.com · Complete', vault: 'vaultapp.com · Vault Manager' };
+  document.getElementById('url-bar').textContent = urls[name] || 'paypal.com';
+  window.scrollTo(0, 0);
+}
+function goBack() {
+  const cur = document.querySelector('.screen.active')?.id.replace('screen-', '');
+  if (cur !== 'app') showScreen('app');
+}
+
+// ─── Open scenario ────────────────────────────────────────────────────────────
+async function openScenario(type) {
+  currentType = type;
+  cardFieldsInst = null;
+  const cfg = SCENARIOS[type];
+
+  // Reset
+  ['paypal-btn-wrap','apple-btn-wrap','cf-number','cf-expiry','cf-cvv']
+    .forEach(id => { document.getElementById(id).innerHTML = ''; });
+  document.getElementById('card-block').style.display  = 'none';
+  document.getElementById('apple-block').style.display = 'none';
+  document.getElementById('pm-area').style.display     = 'none';
+  document.getElementById('sdk-spinner').style.display = 'none';
+  document.getElementById('log-box').innerHTML         = '';
+  document.getElementById('log-box').classList.remove('open');
+
+  // Order summary
+  document.getElementById('order-summary').innerHTML = `
+    <div class="order-merchant">
+      <div class="merch-icon">⚡</div>
+      <div>
+        <div class="merch-name">VaultApp</div>
+        <div class="merch-domain">${cfg.domain}</div>
+      </div>
+    </div>
+    ${cfg.lines.map(([k,v]) => `<div class="order-line"><span>${k}</span><span>${v}</span></div>`).join('')}
+    <hr class="order-divider">
+    <div class="order-total">
+      <span class="total-label">${cfg.totalLabel}</span>
+      <span class="total-amount">${cfg.totalAmount}</span>
+    </div>`;
+
+  document.getElementById('vault-note-text').textContent = cfg.vaultNote;
+  showScreen('checkout');
+
+  await loadSDKAndRender(type);
+}
+
+// ─── Load PayPal JS SDK ───────────────────────────────────────────────────────
+async function loadSDKAndRender(type) {
+  document.getElementById('sdk-spinner').style.display = 'flex';
+
+  try {
+    // 1. Client token — links vault to customerId in PayPal's system
+    log('→ POST /api/client-token');
+    const ct = await fetch('/api/client-token', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId: CFG.customerId }),
+    }).then(r => r.json());
+    if (!ct.clientToken) throw new Error('client-token failed: ' + JSON.stringify(ct));
+    log('← client_token OK', 'ok');
+
+    // 2. Remove old SDK instance
+    const old = document.getElementById('pp-sdk');
+    if (old) old.remove();
+    try { if (window.paypal) delete window.paypal; } catch {}
+
+    // 3. Load SDK — always intent=capture (all flows use Orders API)
+    const params = new URLSearchParams({
+      'client-id': CFG.clientId,
+      currency:    'USD',
+      vault:       'true',
+      intent:      'capture',
+      components:  'buttons',
+    });
+    log('→ Loading PayPal SDK (intent=capture, vault=true)');
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.id  = 'pp-sdk';
+      s.src = `https://www.paypal.com/sdk/js?${params}`;
+      s.setAttribute('data-user-id-token', ct.clientToken);
+      s.onload  = res;
+      s.onerror = () => rej(new Error('SDK load failed'));
+      document.head.appendChild(s);
+    });
+    log('← SDK ready', 'ok');
+
+    document.getElementById('sdk-spinner').style.display = 'none';
+    document.getElementById('pm-area').style.display     = 'block';
+
+    renderPayPalButtons(type);
+    renderApplePay(type);
+
+  } catch (e) {
+    document.getElementById('sdk-spinner').style.display = 'none';
+    log('Error: ' + e.message, 'err');
+    showToast(e.message);
+  }
+}
+
+// ─── PayPal Buttons (all scenarios) ──────────────────────────────────────────
+function renderPayPalButtons(type) {
+  const cfg = SCENARIOS[type];
+  paypal.Buttons({
+    style: { color: 'blue', shape: 'pill', height: 44 },
+
+    createOrder: async () => {
+      log(`→ POST /api/order/create  type=${type}`);
+      const d = await fetch('/api/order/create', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, customerId: CFG.customerId }),
+      }).then(r => r.json());
+      if (!d.id) throw new Error(d.message || JSON.stringify(d));
+      log(`← Order ID: ${d.id}`, 'ok');
+      return d.id;
+    },
+
+    onApprove: async (data) => {
+      log(`→ POST /api/order/capture  orderId=${data.orderID}`);
+      const cap = await fetch('/api/order/capture', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: data.orderID }),
+      }).then(r => r.json());
+
+      const vaultId = cap?.payment_source?.paypal?.attributes?.vault?.id ?? null;
+      log(`← ${cap.status}${vaultId ? '  vault=' + vaultId : ''}`, 'ok');
+      showSuccess({ type, orderId: data.orderID, vaultId, vaultSource: 'paypal', cap });
+    },
+
+    onError: (e) => { log('PayPal error: ' + JSON.stringify(e), 'err'); showToast('PayPal error — see API log'); },
+    onCancel: ()  => showToast('Payment cancelled'),
+  }).render('#paypal-btn-wrap');
+}
+
+// ─── Card Fields ──────────────────────────────────────────────────────────────
+async function renderCardFields(type) {
+  if (!window.paypal?.CardFields) return;
+  try {
+    const cf = paypal.CardFields({
+      createOrder: async () => {
+        log(`→ POST /api/order/create  type=${type} (card)`);
+        const d = await fetch('/api/order/create', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, customerId: CFG.customerId }),
+        }).then(r => r.json());
+        if (!d.id) throw new Error(d.message || JSON.stringify(d));
+        log(`← Order ID: ${d.id}`, 'ok');
+        return d.id;
+      },
+      onApprove: async (data) => {
+        log(`→ POST /api/order/capture  orderId=${data.orderID}`);
+        const cap = await fetch('/api/order/capture', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: data.orderID }),
+        }).then(r => r.json());
+
+        const vaultId = cap?.payment_source?.card?.attributes?.vault?.id ?? null;
+        log(`← ${cap.status}${vaultId ? '  card-vault=' + vaultId : ''}`, 'ok');
+
+        const btn = document.getElementById('btn-card-pay');
+        btn.textContent = 'Pay with Card'; btn.disabled = false;
+        showSuccess({ type, orderId: data.orderID, vaultId, vaultSource: 'card', cap });
+      },
+      onError: (e) => {
+        log('Card error: ' + JSON.stringify(e), 'err');
+        const btn = document.getElementById('btn-card-pay');
+        btn.textContent = 'Pay with Card'; btn.disabled = false;
+        showToast('Card error — Advanced Card Payments must be enabled in sandbox settings');
+      },
+    });
+
+    if (cf.isEligible()) {
+      cardFieldsInst = cf;
+      cf.NumberField({ placeholder: '4111 1111 1111 1111' }).render('#cf-number');
+      cf.ExpiryField({ placeholder: 'MM / YY' }).render('#cf-expiry');
+      cf.CVVField({ placeholder: 'CVV' }).render('#cf-cvv');
+      document.getElementById('card-block').style.display = 'block';
+    }
+  } catch (e) {
+    log('Card fields unavailable: ' + e.message, 'err');
+  }
+}
+async function submitCard() {
+  if (!cardFieldsInst) return;
+  const btn = document.getElementById('btn-card-pay');
+  btn.textContent = 'Processing…'; btn.disabled = true;
+  try { await cardFieldsInst.submit(); }
+  catch (e) { btn.textContent = 'Pay with Card'; btn.disabled = false; showToast(e.message); }
+}
+
+// ─── Apple Pay ────────────────────────────────────────────────────────────────
+function renderApplePay(type) {
+  if (!window.paypal) return;
+  try {
+    paypal.Buttons({
+      fundingSource: paypal.FUNDING.APPLEPAY,
+      style: { shape: 'pill', height: 44 },
+      createOrder: () => fetch('/api/order/create', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, customerId: CFG.customerId }),
+      }).then(r => r.json()).then(d => d.id),
+      onApprove: (data) => fetch('/api/order/capture', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: data.orderID }),
+      }).then(r => r.json()).then(cap =>
+        showSuccess({ type, orderId: data.orderID, vaultSource: 'apple_pay', cap })
+      ),
+      onError: () => {},
+    }).render('#apple-btn-wrap')
+      .then(() => { document.getElementById('apple-block').style.display = 'block'; })
+      .catch(() => {});
+  } catch {}
+}
+
+// ─── Success ──────────────────────────────────────────────────────────────────
+function showSuccess({ type, orderId, vaultId, vaultSource, cap }) {
+  const cfg = SCENARIOS[type];
+  document.getElementById('suc-title').textContent = cfg.successTitle;
+  document.getElementById('suc-sub').textContent   = cfg.successSub;
+
+  const vr = document.getElementById('suc-vault');
+  const vb = document.getElementById('suc-vault-body');
+  const rows = [];
+  if (orderId)     rows.push(['Order ID',    orderId]);
+  if (vaultId)     rows.push(['Vault Token', vaultId, true]);
+  if (vaultSource) rows.push(['Method',      { paypal: '💙 PayPal Wallet', card: '💳 Card', apple_pay: ' Apple Pay' }[vaultSource] || vaultSource]);
+  if (cap?.status) rows.push(['Status',      cap.status]);
+  if (type === 'subscription') rows.push(['Next charge', 'Backend off-session (monthly)']);
+
+  vr.style.display = vaultId ? 'block' : 'none';
+  vb.innerHTML = rows.map(([k, v, tok]) =>
+    `<div class="vr-row"><span class="vr-key">${k}</span><span class="vr-val${tok ? ' token' : ''}">${v}</span></div>`
+  ).join('');
+  showScreen('success');
+}
+
+// ─── Vault Manager ────────────────────────────────────────────────────────────
+async function openVaultManager() {
+  showScreen('vault');
+  await loadTokens();
+}
+async function loadTokens() {
+  const list = document.getElementById('token-list');
+  list.innerHTML = '<div class="spinner-row"><div class="spin"></div> Loading…</div>';
+  document.getElementById('charge-result').innerHTML = '';
+  try {
+    const d = await fetch(`/api/vault/tokens?customerId=${encodeURIComponent(CFG.customerId)}`).then(r => r.json());
+    const tokens = d.payment_tokens || [];
+    if (!tokens.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🔐</div>No saved payment methods.<br>Complete a payment to vault a token.</div>';
+      return;
+    }
+    list.innerHTML = tokens.map(renderTokenCard).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+function renderTokenCard(t) {
+  const src = t.payment_source;
+  const isCard = !!src?.card;
+  const icon   = isCard ? '💳' : '💙';
+  const label  = isCard
+    ? `${src.card.brand || 'Card'} ···${src.card.last_digits || '****'}`
+    : `PayPal Wallet`;
+  const detail = isCard ? `Exp: ${src.card.expiry || ''}` : (src.paypal?.email_address || src.paypal?.account_id || '');
+  const bg     = isCard ? '#f0fdf4' : '#eff6ff';
+
+  return `
+  <div class="token-card" id="tk-${t.id}">
+    <div class="tc-hd">
+      <div class="tc-icon" style="background:${bg}">${icon}</div>
+      <div>
+        <div class="tc-type">${label}</div>
+        ${detail ? `<div class="tc-id">${detail}</div>` : ''}
+        <div class="tc-id">${t.id}</div>
+      </div>
+    </div>
+    <div class="tc-amount-row">
+      <input class="tc-amount" id="amt-${t.id}" type="number" value="${isCard ? '19.99' : '9.99'}" min="0.01" step="0.01">
+      <span style="font-size:13px;color:#8e8e93">USD</span>
+    </div>
+    <div class="tc-actions">
+      <button class="btn-charge" onclick="chargeToken('${t.id}','${isCard ? 'card' : 'paypal'}')">⚡ Off-Session Charge</button>
+      <button class="btn-delete" onclick="deleteToken('${t.id}')">🗑 Delete</button>
+    </div>
+  </div>`;
+}
+
+async function chargeToken(id, method) {
+  const btn    = document.querySelector(`#tk-${id} .btn-charge`);
+  const amount = document.getElementById(`amt-${id}`).value || '9.99';
+  btn.textContent = '⏳ Charging…'; btn.disabled = true;
+
+  const endpoint = method === 'card' ? '/api/vault/card-charge' : '/api/vault/charge';
+  const r = await fetch(endpoint, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vaultId: id, amount, description: `VaultApp off-session $${amount}` }),
+  });
+  const d = await r.json();
+  const ok = d.status === 'COMPLETED';
+
+  document.getElementById('charge-result').innerHTML = `
+    <div class="charge-result${ok ? '' : ' fail'}" style="border-color:${ok ? '#4ade80' : '#fca5a5'};background:${ok ? '#f0fdf4' : '#fff0f0'}">
+      <div class="cr-title" style="color:${ok ? '#15803d' : '#dc2626'}">${ok ? '✅ Charge Successful' : '❌ Charge Failed'}</div>
+      <div class="vr-row"><span class="vr-key">Order ID</span><span class="vr-val">${d.orderId || '—'}</span></div>
+      <div class="vr-row"><span class="vr-key">Status</span><span class="vr-val">${d.status || JSON.stringify(d).slice(0,60)}</span></div>
+      <div class="vr-row"><span class="vr-key">Amount</span><span class="vr-val">$${amount} USD</span></div>
+      <div class="vr-row"><span class="vr-key">Vault Token</span><span class="vr-val token">${id}</span></div>
+    </div>`;
+  document.getElementById('charge-result').scrollIntoView({ behavior: 'smooth' });
+  btn.textContent = '⚡ Off-Session Charge'; btn.disabled = false;
+}
+
+async function deleteToken(id) {
+  if (!confirm(`Delete vault token\n${id}?`)) return;
+  const r = await fetch(`/api/vault/tokens/${id}`, { method: 'DELETE' });
+  const d = await r.json();
+  if (d.deleted || r.status === 204) { showToast('Token deleted'); loadTokens(); }
+  else showToast('Delete failed: ' + JSON.stringify(d));
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function log(msg, cls = '') {
+  const box = document.getElementById('log-box');
+  const el  = document.createElement('div');
+  el.className   = 'log-line' + (cls ? ' ' + cls : '');
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  box.appendChild(el);
+  box.scrollTop  = box.scrollHeight;
+}
+function toggleLog() { document.getElementById('log-box').classList.toggle('open'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
