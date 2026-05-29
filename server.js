@@ -19,7 +19,7 @@
  * Sandbox base: https://api-m.sandbox.paypal.com
  */
 
-require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
+require('dotenv').config({ path: require('path').resolve(__dirname, 'config.env') });
 const express = require('express');
 const fetch   = require('node-fetch');
 const { v4: uuid } = require('uuid');
